@@ -165,10 +165,12 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description=desc)
 
     parser.add_argument('-u', '--username', type=str, action='store',
-                        required=True,
+                        required=False,
+                        default='kuldeepdhangarkd@gmail.com',
                         help='A valid LinkedIn username.')
     parser.add_argument('-c', '--company', type=str, action='store',
-                        required=True,
+                        required=False,
+                        default='joinventures',
                         help='Company name exactly as typed in the compnay '
                              'linkedin profile page URL.')
     parser.add_argument('-p', '--password', type=str, action='store',
@@ -369,9 +371,32 @@ def get_company_info(name, session):
         print(f"    {response.status_code}")
         sys.exit()
 
+    # Some geo regions are being fed a 'lite' version of LinkedIn mobile:
+    # https://bit.ly/2vGcft0
+    # The following bit is a temporary fix until I can figure out a
+    # low-maintenance solution that is inclusive of these areas.
+    if 'mwlite' in response.text:
+        print("[!] You are being served the 'lite' version of"
+              " LinkedIn (https://bit.ly/2vGcft0) that is not yet supported"
+              " by this tool. Please try again using a VPN exiting from USA,"
+              " EU, or Australia.")
+        print("    A permanent fix is being researched. Sorry about that!")
+        sys.exit()
+
+    try:
+        response_json = json.loads(response.text)
+    except json.decoder.JSONDecodeError:
+        print("[!] Yikes! Could not decode JSON when getting company info! :(")
+        print("Here's the first 200 characters of the HTTP reply which may help in debugging:\n\n")
+        print(response.text[:200])
+        sys.exit()
+
+    company = response_json["elements"][0]
+
 
 def main():
     """Main Function"""
+    print("$%^&*(*&^%$#!@#$%^&*)))*&^%!@#$%^&^%#$^**(*&^%$@#$%^&*")
     print("Let's access the username of a company")
     args = parse_arguments()
 
@@ -387,8 +412,9 @@ def main():
 
     # Get basic company info
     print("[*] Trying to get company info...")
-    company_id, staff_count = get_company_info(args.company, session)
 
     print("[*] Calculating inner and outer loops...")
-    args.depth, args.geoblast = set_inner_loops(staff_count, args)
-    out
+
+
+if __name__ == "__main__":
+    main()
