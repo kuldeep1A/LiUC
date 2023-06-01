@@ -127,5 +127,40 @@ class NameMutator:
 
         return names
 
+    def first_dot_last(self):
+        """rahul.sharma"""
+        names = set()
+        names.add(self.name['first'] + '.' + self.name['last'])
+
+        if self.name['second']:
+            names.add(self.name['first'] + '.' + self.name['second'])
+
+        return names
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
