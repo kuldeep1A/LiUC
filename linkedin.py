@@ -147,6 +147,13 @@ class NameMutator:
 
         return names
 
+    def first(self):
+        """rahul"""
+        names = set()
+        names.add(self.name['first'])
+
+        return names
+
 
 
 
