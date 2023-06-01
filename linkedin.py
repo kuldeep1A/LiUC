@@ -36,7 +36,6 @@ class NameMutator:
         self.name = self.clean_name(name)
         self.name = self.split_name(name)
 
-
     @staticmethod
     def clean_name(name):
         """
@@ -230,23 +229,80 @@ def parse_arguments():
     return args
 
 
+def login(args):
+    """
+    Creates a new authenticated session.
+
+    Note that a mobile user agent is used. Parsing using the desktop results
+    proved extremely difficult, as shared connections would be returned in
+    a manner that was indistinguishable from the desired targets.
+
+    The other header matters as well, otherwise advanced search functions
+    (region and keyword) will not work.
+
+    The function will check for common failure scenarios - the most common is
+    logging in from a new location. Accounts using multi-factor auth are not
+    yet supported and will produce an error.
+    """
+    session = requests.session()
+    # The following are know errors that require the user to log in via the web
+    login_problems = ['challenge', 'captcha', 'manage-account', 'add-email']
+
+    # Special options below when using a proxy server. Helpful for debugging
+    # the application in Burp Suite.
+    if args.proxy:
+        print("[!] Using a proxy, ignoring SSL errors. Don't get pwned.")
+        session.verify = False
+        urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
+        session.proxies.update(args.proxy_dict)
+
+    # Our search and regex will work only with a mobile user agent and
+    # the correct REST protocol specified below.
+    mobile_agent = ('Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 '
+                    'Build/KOT49H) AppleWebKit/534.30 (KHTML, like Gecko) '
+                    'Version/4.0 Mobile Safari/534.30')
+    session.headers.update({'User-Agent': mobile_agent,
+                            'X-RestLi-Protocol-Version': '2.0.0'})
+
+    # We wll grab an anonymous response to look for the CSRF token, which
+    # is required for our logon attempt.
+    anon_response = session.get('https://www.linkedin.com/login')
+    login_csrf = re.findall(r'name="loginCsrfParm" value="(.*?)',
+                            anon_response.text)
+    if login_csrf:
+        login_csrf = login_csrf[0]
+
+    else:
+        print("Having trouble loading login page... try the command again.")
+        sys.exit()
+
+    # Define the data we will POST for our login.
+    auth_payload = {
+        'session_key': args.username,
+        'session_password': args.password,
+        'isJsEnabled': 'false',
+        'loginCsrfParam': login_csrf
+    }
+
+    # Perform the actual login. We disable redirects as we will use the 302
+    # as an indicator of a successful logon.
+    response = session.post('https://www.linkedin.com/checkpoint/lg/login-submit'
+                            '?loginSubmitSource=GUEST_HOME',
+                            data=auth_payload, allow_redirects=False)
+
+    # Define a successful login by the 302 redirect to the 'feed' page. Try
+    # to detect some other common logon failures and alert the user.
+    if response.status_code in (302, 303):
+        # Add CSRF token for all additional requests
+        session = set_csrf_token(session)
+        redirect = response.headers['Location']
 
 
+def set_csrf_token(session):
+    """Extract the required CSRF token.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    Some functions requires a CSRF token equal to the JSESSIONID.
+    """
+    csrf_token = session.cookies['JSESSIONID'].replace('"', '')
+    session.headers.update({'Csrf-Token': csrf_token})
+    return session
