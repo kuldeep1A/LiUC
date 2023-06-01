@@ -34,6 +34,8 @@ class NameMutator:
 
     def __init__(self, name):
         self.name = self.clean_name(name)
+        self.name = self.split_name(name)
+
 
     @staticmethod
     def clean_name(name):
@@ -78,6 +80,22 @@ class NameMutator:
 
         return name
 
+    @staticmethod
+    def split_name(name):
+        """
+        Takes a name (string) and returns a list of individual name-parts (dict).
+
+        Some people have funny names. We assume the most important name are:
+        first name, last name, and the name of right before the last name (if they have one)
+        """
+        parsed = re.split(' |-', name)
+
+        if len(parsed) > 2:
+            split_name = {'first': parsed[0], 'second': parsed[-2], 'last': parsed[-1]}
+        else:
+            split_name = {'first': parsed[0], 'second': '', 'last': parsed[-1]}
+
+        return split_name
 
 
 
