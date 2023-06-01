@@ -97,6 +97,18 @@ class NameMutator:
 
         return split_name
 
+    def f_last(self):
+        """rahulsharma"""
+        names = set()
+        names.add(self.name['first'][0] + self.name['last'])
+
+        if self.name['second']:
+            names.add(self.name['first'][0] + self.name['second'])
+
+        return names
+
+
+
 
 
 
