@@ -30,7 +30,7 @@ GEO_REGIONS = {
     'r12': 'af:0|bh:0|il:0|jo:0|kw:0|pk:0|qa:0|sa:0|ae:0'}
 
 
-class NameMutator:
+class NameMutator():
 
     def __init__(self, name):
         self.name = self.clean_name(name)
@@ -334,6 +334,7 @@ def login(args):
     print(f"RESPONSE TEXT:\n{response.text}")
     return False
 
+
 def set_csrf_token(session):
     """Extract the required CSRF token.
 
@@ -342,3 +343,52 @@ def set_csrf_token(session):
     csrf_token = session.cookies['JSESSIONID'].replace('"', '')
     session.headers.update({'Csrf-Token': csrf_token})
     return session
+
+
+def get_company_info(name, session):
+    """Scrapes basic company info.
+
+    Note that not all companies fill in this info, so exceptions are provided.
+    The company name can be found easily by browsing LinkedIn in a web browser,
+    searching for the company, and looking at the name in the address bar.
+    """
+    # https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote_plus
+    escaped_name = urllib.parse.quote_plus(name)
+
+    response = session.get(('https://www.linkedin.com'
+                            '/voyager/api/organization/companies?'
+                            'q=universalName&universalName=' + escaped_name))
+    print(response.text)
+
+    if response.status_code == 404:
+        print("[!] Could not find that company name. Please double-check LinkedIn and try again.")
+        sys.exit()
+
+    if response.status_code != 200:
+        print("[!] Unexpected HTTP response code when trying to get the company info:")
+        print(f"    {response.status_code}")
+        sys.exit()
+
+
+def main():
+    """Main Function"""
+    print("Let's access the username of a company")
+    args = parse_arguments()
+
+    # Instantiate a session by login in to LinkedIn
+    session = login(args)
+
+    # If we can't get a valid session, we quit now. Specific errors are
+    # printed to the console inside the login() function.
+    if not session:
+        sys.exit()  # Good byy :(
+
+    print("[*] Successfully logged in.")
+
+    # Get basic company info
+    print("[*] Trying to get company info...")
+    company_id, staff_count = get_company_info(args.company, session)
+
+    print("[*] Calculating inner and outer loops...")
+    args.depth, args.geoblast = set_inner_loops(staff_count, args)
+    out
