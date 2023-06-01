@@ -155,8 +155,79 @@ class NameMutator:
         return names
 
 
+def parse_arguments():
+    """
+    Handle user-supplied arguments
+    """
+    desc = ('OSINT tool to generate lists of probable usernames from a'
+            ' given company\'s LinkedIn page. This tool may break when'
+            ' LinkedIn changes their site.')
 
+    parser = argparse.ArgumentParser(description=desc)
 
+    parser.add_argument('-u', '--username', type=str, action='store',
+                        required=True,
+                        help='A valid LinkedIn username.')
+    parser.add_argument('-c', '--company', type=str, action='store',
+                        required=True,
+                        help='Company name exactly as typed in the compnay '
+                             'linkedin profile page URL.')
+    parser.add_argument('-p', '--password', type=str, action='store',
+                        help='Specify your password in clear-text on the '
+                             'command line. If not specified, will prompt and '
+                             'obfuscate as you type.')
+    parser.add_argument('-n', '--domain', type=str, action='store',
+                        default='',
+                        help='Append a domain name to username output. '
+                             '[example: "-n uber.com" would output nikita@uber.com]')
+    parser.add_argument('-d', '--depth', type=int, action='store',
+                        default=False,
+                        help='Search depth (how many loops of 25). If unset, '
+                             'will try to grab them all.')
+    parser.add_argument('-s', '--sleep', type=int, action='store', default=0,
+                        help='Seconds to sleep between search loops.'
+                             ' Defaults to 0.')
+    parser.add_argument('-x', '--proxy', type=str, action='store',
+                        default=False,
+                        help='Proxy server to use.WARNING: WILL DISABLE SSL '
+                             'VERIFICATION. [example: "-p https://localhost:8080"]')
+    parser.add_argument('-k', '--keywords', type=str, action='store',
+                        default=False,
+                        help='Filter results by a a list of command separated '
+                             'keywords. Will do a separate loop for each keyword, '
+                             'potentially bypassing the 1,000 record limit. '
+                             '[example: "-k \'sales,human resources,information '
+                             'technology\']')
+    parser.add_argument('-g', '--geoblast', default=False, action="store_true",
+                        help='Attempts to bypass the 1,000 record search limit'
+                             ' by running multiple searches split across geographic'
+                             ' regions.')
+    parser.add_argument('-o', '--output', default="li2u-output", action="store",
+                        help='Output Directory, defaults to li2u-output')
+
+    args = parser.parse_args()
+
+    # Proxy argument is fed to requests as a dictionary, setting this now:
+    args.proxy_dict = {"https": args.proxy}
+
+    # If appending an email address, preparing this string now:
+    if args.domain:
+        args.domain = '@' + args.domain
+
+        # Keywords are fed in as a list. Splitting comma-separated user input now:
+    if args.keywords:
+        args.keywords = args.keywords.split(',')
+
+        # These two functions are not currently compatible, squashing this now:
+    if args.keywords and args.geoblast:
+        print("Sorry, keywords and geoblast are currently not compatible. Use one or the other.")
+        sys.exit()
+
+        # If password is not passed in the command line, prompt for it
+    # in a more secure fashion (not shown on screen)
+    args.password = args.password or getpass.getpass()
+
+    return args
 
 
 
