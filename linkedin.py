@@ -137,7 +137,15 @@ class NameMutator:
 
         return names
 
+    def first_l(self):
+        """rahuls"""
+        names = set()
+        names.add(self.name['first'] + self.name['last'][0])
 
+        if self.name['second']:
+            names.add(self.name['first'] + self.name['second'][0])
+
+        return names
 
 
 
