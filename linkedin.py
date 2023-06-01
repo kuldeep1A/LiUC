@@ -117,6 +117,15 @@ class NameMutator:
 
         return names
 
+    def last_f(self):
+        """sharmarahul"""
+        names = set()
+        names.add(self.name['last'] + self.name['first'][0])
+
+        if self.name['second']:
+            names.add(self.name['second'] + self.name['first'][0])
+
+        return names
 
 
 
