@@ -296,7 +296,43 @@ def login(args):
         # Add CSRF token for all additional requests
         session = set_csrf_token(session)
         redirect = response.headers['Location']
+        # print(redirect)
+        if 'feed' in redirect:
+            return session
+        if 'add-phone' in redirect:
+            # Skip the prompt to add a phone number
+            url = 'https://www.linkedin.com/checkpoint/post-login/security/dismiss-phone-event'
+            response = session.post(url)
+            if response.status_code == 200:
+                return session
+            print("[!] Could not skip phone phone prompt. Log in via the web and then try again.\n")
 
+        elif any(x in redirect for x in login_problems):
+            print("[!] LinkedIn has a message for you that you need to address. "
+                  "Please log in using a web browser first, and then come back and try again.")
+        else:
+            # The below will detect some 302 that I don't yet know about.
+            print("[!] Some unknown redirection occurred. If this persists, please open an issue "
+                  "and include the info below:")
+            print("DEBUG INFO:")
+            print(f"LOCATION: {redirect}")
+            print(f"RESPONSE TEXT: \n{response.text}")
+
+        return False
+
+    # A failed logon doesn't generate a 202 at all, but simply responds with
+    # the logon page. We detect this here.
+    if '<title>LinkedIn Login' in response.text:
+        print("[!] Check your username and password and try again.\n")
+        return False
+
+    # If we make it past everything above, we have no idea what happened.
+    # Oh well, we fail.
+    print("[!] Some unknown error logging in. If this persists, please open an issue on github.\n")
+    print("DEBUG INFO:")
+    print(f"RESPONSE CODE: {response.status_code}")
+    print(f"RESPONSE TEXT:\n{response.text}")
+    return False
 
 def set_csrf_token(session):
     """Extract the required CSRF token.
