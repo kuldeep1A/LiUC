@@ -245,6 +245,7 @@ def login(args):
     The function will check for common failure scenarios - the most common is
     logging in from a new location. Accounts using multi-factor auth are not
     yet supported and will produce an error.
+    :rtype: requests.sessions.Session
     """
     session = requests.session()
     # The following are know errors that require the user to log in via the web
@@ -412,6 +413,17 @@ def get_company_info(name, session):
     return found_id, found_staff
 
 
+def set_inner_loops(staff_count, args):
+    """Defines total hits to the search API.
+
+    Set a maximum amount of loops based on either the number of staff
+    discovered in the get_company_info function or the search depth argument
+    provided by the user. This limit is PER SEARCH, meaning it may be
+    exceeded if you use the geoblast or keyword feature.
+
+
+    """
+
 
 def main():
     """Main Function"""
@@ -421,17 +433,22 @@ def main():
 
     # Instantiate a session by login in to LinkedIn
     session = login(args)
-
     # If we can't get a valid session, we quit now. Specific errors are
     # printed to the console inside the login() function.
     if not session:
+        print("Good byy :(")
         sys.exit()  # Good byy :(
 
     print("[*] Successfully logged in.")
 
     # Get basic company info
     print("[*] Trying to get company info...")
-    company_id, staff_count = get_company_info(args.company, session)
+    if session is not bool:
+        company_id, staff_count = get_company_info(args.company, session)
+
+    # Define inner and outer loops
+    print("[*] Calculating inner and outer loops...")
+    args.depth, args.geoblast = set_inner_loops(staff_count, args)
 
 
 if __name__ == "__main__":
