@@ -170,7 +170,7 @@ def parse_arguments():
                         help='A valid LinkedIn username.')
     parser.add_argument('-c', '--company', type=str, action='store',
                         required=False,
-                        default='joinventures',
+                        default='dbvertex',
                         help='Company name exactly as typed in the company '
                              'linkedin profile page URL.')
     parser.add_argument('-p', '--password', type=str, action='store',
@@ -522,6 +522,38 @@ def find_employees(result):
     :param result:
     :return:
     """
+    found_employees = []
+
+    try:
+        result_json = json.loads(result)
+    except json.decoder.JSONDecodeError:
+        print("\n[!] Yikes! Could not decode JSON when scraping this loop! :(")
+        print("Here's the first 200 characters of the HTTP reply which may help in debugging: \n\n")
+        print(result[:200])
+        return False
+
+    # When you get to the last page of results, the next page will have an empty
+    # "elements" list.
+    if not result_json['elements']:
+        return False
+
+    # The "elements" list is the mini-profile you see when scrolling through a
+    # company's employees. It does not have all info on the person, like their
+    # entire job history. It only has some basics.
+    for body in result_json['elements']:
+        profile = (body['hitInfo']
+        ['com.linkedin.voyager.search.SearchProfile']
+        ['miniProfile'])
+        full_name = f"{profile['firstName']} {profile['lastName']}"
+        employee = {'full_name': full_name,
+                    'occupation': profile['occupation']}
+
+        # Some employee names are not disclosed and return empty. We don't want those.
+        if len(employee['full_name']) > 1:
+            found_employees.append(employee)
+
+    return found_employees
+
 
 def do_loops(session, company_id, outer_loops, args):
     """
