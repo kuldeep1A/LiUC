@@ -415,6 +415,15 @@ def get_company_info(name, session):
 
 def set_inner_loops(staff_count, args):
     """Defines total hits to the search API.
+
+    Sets a maximum amount of loops based no either the number of staff
+    discovered in the get_company_info function or the search depth argument
+    provided by the user. This limit is PER SEARCH, meaning it may be
+    exceeded if you use the geoblast or keyword feature.
+
+    Loops may stop early if no more matches are found or if a single search
+    exceeds LinkedIn's 1000 non-commercial use limit.
+    
     """
 
     # We will look for 25 names on each loop. So, we set a maximum amount of
@@ -476,6 +485,7 @@ def main():
     # Define inner and outer loops
     print("[*] Calculating inner and outer loops...")
     args.depth, args.geoblast = set_inner_loops(staff_count, args)
+    outer_loops = set_outer_loops(args)
 
 
 if __name__ == "__main__":
