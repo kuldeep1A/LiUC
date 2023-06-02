@@ -609,6 +609,21 @@ def do_loops(session, company_id, outer_loops, args):
 
                 found_employees = find_employees(result.text)
 
+                if not found_employees:
+                    sys.stdout.write('\n')
+                    print("[*] We have hit the end of the road! Moving on...")
+                    break
+
+                new_names += len(found_employees)
+                employee_list.extend(found_employees)
+
+                sys.stdout.write(f"     [*] Added {str(new_names)} new names. "
+                                 f"Running total: {str(len(employee_list))}"
+                                 "              \r")
+
+                # If the user has defined a sleep between loops, we take a little
+                # nap here.
+                time.sleep(args.sleep)
     except KeyboardInterrupt:
         print("\n\n[!] Caught Ctrl-C. Breaking loops and writing files")
 
