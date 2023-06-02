@@ -171,7 +171,7 @@ def parse_arguments():
     parser.add_argument('-c', '--company', type=str, action='store',
                         required=False,
                         default='joinventures',
-                        help='Company name exactly as typed in the compnay '
+                        help='Company name exactly as typed in the company '
                              'linkedin profile page URL.')
     parser.add_argument('-p', '--password', type=str, action='store',
                         help='Specify your password in clear-text on the '
@@ -415,14 +415,41 @@ def get_company_info(name, session):
 
 def set_inner_loops(staff_count, args):
     """Defines total hits to the search API.
-
-    Set a maximum amount of loops based on either the number of staff
-    discovered in the get_company_info function or the search depth argument
-    provided by the user. This limit is PER SEARCH, meaning it may be
-    exceeded if you use the geoblast or keyword feature.
-
-
     """
+
+    # We will look for 25 names on each loop. So, we set a maximum amount of
+    # loops to the amount of staff ? 25 + 1 more to catch remainders.
+    loops = int((staff_count / 25) + 1)
+    print(f"[*] Company has {staff_count} profiles to check.Some may be anonymous.")
+
+    # The lines below attempts to detect large result set and compare that
+    # with the command line arguments passed. The goal is to warn when you
+    # may not get all the results and to suggest way to get more.
+    if staff_count > 100 and not args.geoblast and not args.keywords:
+        print("[!] Note: LinkedIn limits us to a maximum of 1000"
+              " results!\n"
+              "     Try the --geoblast or --keywords parameter to bypass")
+    elif staff_count < 1000 and args.geoblast:
+        print("[!] Geoblast is not necessary, as this company has"
+              " less than 1,000 staff. Disabling.")
+        args.geoblast = False
+    elif staff_count > 1000 and args.geoblast:
+        print("[*] High staff count, geoblast is enabled. Let's rock.")
+    elif staff_count > 1000 and args.keywords:
+        print("[*] High staff count, using keywords. Hop you picked"
+              " some good ones.")
+
+    # If the user purposely restricted the search depth, they probably know
+    # what they are doing, but we warn them just in case.
+    if args.depth and args.depth < loops:
+        print("[!] You defined a low custom search depth, so we"
+              " might not get them all.\n\n")
+    else:
+        print(f"[*] Setting each iteration to a maximum of {loops} loops of"
+              f" 25 results each.\n\n")
+        args.depth = loops
+
+    return args.depth, args.geoblast
 
 
 def main():
