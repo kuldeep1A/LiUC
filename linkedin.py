@@ -483,13 +483,57 @@ def set_outer_loops(args):
     else:
         outer_loops = range(0, 1)
 
-    print(outer_loops)
     return outer_loops
+
+
+def get_results(session, company_id, page, region, keyword):
+
+
+def do_loops(session, company_id, outer_loops, args):
+    """
+    Performs looping where the actual HTTP requests to scrape names occurs
+
+    :param session:
+    :param company_id:
+    :param outer_loops:
+    :param args:
+    :return:
+    """
+    # Crafting the right URL is a bit tricky, so currently unnecessary
+    # parameters are still being included but set to empty. You will see this
+    # below with geoblast and keywords.
+    employee_list = []
+
+    # We want to be able to break here with Ctrl-C and still write the names we have
+    try:
+        for current_loop in outer_loops:
+            if args.geoblast:
+                region_name = 'r' + str(current_loop)
+                current_region = GEO_REGIONS[region_name]
+                current_keyword = ''
+                print(f"\n[*] Looping through region {current_region} ")
+            elif args.keywords:
+                current_keyword = args.keywords[current_loop]
+                current_region = ''
+                print(f"\n[*] Looping through keyword {current_keyword}")
+            else:
+                current_region = ''
+                current_keyword = ''
+
+            # This is the inner loop. It will search results 25 at a time.
+            for page in range(0, args.depth):
+                new_names = 0
+
+                sys.stdout.flush()
+                # Standard output
+                sys.stdout.write(f"[*] Scraping results on loop {str(page + 1)}...      ")
+                result = get_results(session, company_id, page, current_region, current_keyword)
+
 
 
 def main():
     """Main Function"""
-    print("$%^&*(*&^%$#!@#$%^&*)))*&^%!@#$%^&^%#$^**(*&^%$@#$%^&*")
+    print("-"*50)
     print("Let's access the username of a company")
     args = parse_arguments()
 
@@ -514,7 +558,8 @@ def main():
     outer_loops = set_outer_loops(args)
 
     # Do the actual searching
-    print()
+    print("[*] Starting search.... Press Ctrl-C to break and write files early.\n")
+    employess = do_loops(session, company_id, outer_loops, args)
 
 if __name__ == "__main__":
     main()
