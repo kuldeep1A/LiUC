@@ -630,6 +630,25 @@ def do_loops(session, company_id, outer_loops, args):
     return employee_list
 
 
+def write_files(company, domain, employees, out_dir):
+    """Writes data to various formatted output files.
+
+    After scraping and processing is complete, this function formats the raw
+    names into common username formats and writes them into a directory called
+    liUC-output unless specified.
+
+    See in-line comments for decisions made on handling special cases.
+    """
+
+    # Check for and create an output directory to store the files.
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    # Write out all the raw and mutated names to files
+    with open(f'{out_dir}/{company}-raw-names.txt', 'w', encoding='utf-8') as outfile:
+        for employee in employees:
+            outfile.write(employee['full_name'] + '\n')
+
 def main():
     """Main Function"""
     print("-" * 50)
@@ -659,6 +678,10 @@ def main():
     # Do the actual searching
     print("[*] Starting search.... Press Ctrl-C to break and write files early.\n")
     employees = do_loops(session, company_id, outer_loops, args)
+
+    # Write the data to some files.
+    write_files(args.company, args.domain, employees, args.output)
+
 
 
 if __name__ == "__main__":
