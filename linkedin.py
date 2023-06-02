@@ -487,6 +487,31 @@ def set_outer_loops(args):
 
 
 def get_results(session, company_id, page, region, keyword):
+    """
+    Scrapes raw data for processing.
+
+    :param session:
+    :param company_id:
+    :param page:
+    :param region:
+    :param keyword:
+    :return:
+    """
+    url = ('https://www.linkedin.com'
+           '/voyager/api/search/hits'
+           f'?facetCurrentCompany=List({company_id})'
+           f'&facetGeoRegion=List({region})'
+           f'&keywords=List({keyword})'
+           '&q=people&maxFacetValues=15'
+           '&supportedFacets=List(GEO_REGION,CURRENT_COMPANY)'
+           '&count=25'
+           '&origin=organization'
+           f'&start={page * 25}')
+
+    # Perform the search for this iteration.
+    result = session.get(url)
+
+    return result
 
 
 def do_loops(session, company_id, outer_loops, args):
@@ -529,6 +554,23 @@ def do_loops(session, company_id, outer_loops, args):
                 sys.stdout.write(f"[*] Scraping results on loop {str(page + 1)}...      ")
                 result = get_results(session, company_id, page, current_region, current_keyword)
 
+                if result.status_code != 200:
+                    print(f"\n[!] Yikes, got an HTTP {result.status_code}. This is not normal")
+                    print("Bailing from loops, but you should troubleshoot.")
+                    break
+
+                # Commercial Search Limit might be triggerd
+                if "UPSELL_LIMIT" in result.text:
+                    sys.stdout.write('\n')
+                    print("[!] You've hit the Commercial search limit! "
+                          "Try again on the 1st of the month. Sorry. :(")
+                    break
+                # found_employees = find_employees(result.text)
+    except KeyboardInterrupt:
+        print("\n\n[!] Caught Ctrl-C. Breaking loops and writing files")
+
+
+    return employee_list
 
 
 def main():
@@ -559,7 +601,7 @@ def main():
 
     # Do the actual searching
     print("[*] Starting search.... Press Ctrl-C to break and write files early.\n")
-    employess = do_loops(session, company_id, outer_loops, args)
+    employees = do_loops(session, company_id, outer_loops, args)
 
 if __name__ == "__main__":
     main()
