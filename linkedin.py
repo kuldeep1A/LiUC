@@ -397,6 +397,19 @@ def get_company_info(name, session):
     found_staff = company['staffCount']
     found_website = company.get('companyPageUrl', "NOT FOUND")
 
+    # We need the numerical id to search for employee info. This one requires some finessing
+    # as it is a portion of a string inside the key.
+    # Example: "urn:li:company:14388394" - we need that 14388394
+    found_id = company['trackingInfo']['objectUrn'].split(':')[-1]
+
+    print("          -Name: " + found_name)
+    print("          -ID: " + found_id)
+    print("          -Desc: " + found_desc)
+    print("          -Staff: " + found_staff)
+    print("          -URL: " + found_website)
+    print(f"\n[*] Hopefully that's the right {name}! If not, check LinkedIn and try again.\n")
+
+    return found_id, found_staff
 
 
 
@@ -419,8 +432,6 @@ def main():
     # Get basic company info
     print("[*] Trying to get company info...")
     company_id, staff_count = get_company_info(args.company, session)
-
-    print("[*] Calculating inner and outer loops...")
 
 
 if __name__ == "__main__":
