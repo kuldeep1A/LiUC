@@ -203,8 +203,8 @@ def parse_arguments():
                         help='Attempts to bypass the 1,000 record search limit'
                              ' by running multiple searches split across geographic'
                              ' regions.')
-    parser.add_argument('-o', '--output', default="li2u-output", action="store",
-                        help='Output Directory, defaults to li2u-output')
+    parser.add_argument('-o', '--output', default="liUC-output", action="store",
+                        help='Output Directory, defaults to liUC-output')
 
     args = parser.parse_args()
 
@@ -286,6 +286,7 @@ def login(args):
         'isJsEnabled': 'false',
         'loginCsrfParam': login_csrf
     }
+    print(auth_payload)
 
     # Perform the actual login. We disable redirects as we will use the 302
     # as an indicator of a successful logon.
@@ -299,7 +300,7 @@ def login(args):
         # Add CSRF token for all additional requests
         session = set_csrf_token(session)
         redirect = response.headers['Location']
-        # print(redirect)
+        print(redirect)
         if 'feed' in redirect:
             return session
         if 'add-phone' in redirect:
@@ -649,6 +650,12 @@ def write_files(company, domain, employees, out_dir):
         for employee in employees:
             outfile.write(employee['full_name'] + '\n')
 
+    with open(f'{out_dir}/{company}-meta-data.txt', 'w', encoding='utf-8') as outfile:
+        outfile.write('full_name,occupation\n')
+        for employee in employees:
+            outfile.write(employee['full_name'] + '.' + employee['occupation'] + '\n')
+
+
 def main():
     """Main Function"""
     print("-" * 50)
@@ -681,7 +688,6 @@ def main():
 
     # Write the data to some files.
     write_files(args.company, args.domain, employees, args.output)
-
 
 
 if __name__ == "__main__":
