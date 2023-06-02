@@ -514,6 +514,15 @@ def get_results(session, company_id, page, region, keyword):
     return result
 
 
+def find_employees(result):
+    """
+    Takes the text response of an HTTP query, converts to JSON, and extracts employee details.
+
+    Returns a list fo dictionary items, or False if none found.
+    :param result:
+    :return:
+    """
+
 def do_loops(session, company_id, outer_loops, args):
     """
     Performs looping where the actual HTTP requests to scrape names occurs
@@ -565,17 +574,18 @@ def do_loops(session, company_id, outer_loops, args):
                     print("[!] You've hit the Commercial search limit! "
                           "Try again on the 1st of the month. Sorry. :(")
                     break
-                # found_employees = find_employees(result.text)
+
+                found_employees = find_employees(result.text)
+
     except KeyboardInterrupt:
         print("\n\n[!] Caught Ctrl-C. Breaking loops and writing files")
-
 
     return employee_list
 
 
 def main():
     """Main Function"""
-    print("-"*50)
+    print("-" * 50)
     print("Let's access the username of a company")
     args = parse_arguments()
 
@@ -602,6 +612,7 @@ def main():
     # Do the actual searching
     print("[*] Starting search.... Press Ctrl-C to break and write files early.\n")
     employees = do_loops(session, company_id, outer_loops, args)
+
 
 if __name__ == "__main__":
     main()
