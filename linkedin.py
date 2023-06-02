@@ -271,7 +271,6 @@ def login(args):
     anon_response = session.get('https://www.linkedin.com/login')
     login_csrf = re.findall(r'name="loginCsrfParam" value="(.*?)"',
                             anon_response.text)
-    print(login_csrf)
     if login_csrf:
         login_csrf = login_csrf[0]
 
@@ -361,14 +360,13 @@ def get_company_info(name, session):
     response = session.get(('https://www.linkedin.com'
                             '/voyager/api/organization/companies?'
                             'q=universalName&universalName=' + escaped_name))
-    print(response.text)
-
+    print(response.status_code)
     if response.status_code == 404:
-        print("[!] Could not find that company name. Please double-check LinkedIn and try again.")
+        print(f"[!] Could not find that '{escaped_name}' company name. Please double-check LinkedIn and try again.")
         sys.exit()
 
     if response.status_code != 200:
-        print("[!] Unexpected HTTP response code when trying to get the company info:")
+        print(f"[!] Unexpected HTTP response code when trying to get the {escaped_name} company info:")
         print(f"    {response.status_code}")
         sys.exit()
 
@@ -394,6 +392,13 @@ def get_company_info(name, session):
 
     company = response_json["elements"][0]
 
+    found_name = company.get('name', "NOT FOUND")
+    found_desc = company.get('tagline', "NOT FOUND")
+    found_staff = company['staffCount']
+    found_website = company.get('companyPageUrl', "NOT FOUND")
+
+
+
 
 def main():
     """Main Function"""
@@ -413,6 +418,7 @@ def main():
 
     # Get basic company info
     print("[*] Trying to get company info...")
+    company_id, staff_count = get_company_info(args.company, session)
 
     print("[*] Calculating inner and outer loops...")
 
