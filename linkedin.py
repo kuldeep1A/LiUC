@@ -269,8 +269,9 @@ def login(args):
     # We wll grab an anonymous response to look for the CSRF token, which
     # is required for our logon attempt.
     anon_response = session.get('https://www.linkedin.com/login')
-    login_csrf = re.findall(r'name="loginCsrfParm" value="(.*?)',
+    login_csrf = re.findall(r'name="loginCsrfParam" value="(.*?)"',
                             anon_response.text)
+    print(login_csrf)
     if login_csrf:
         login_csrf = login_csrf[0]
 
