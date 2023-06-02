@@ -423,7 +423,7 @@ def set_inner_loops(staff_count, args):
 
     Loops may stop early if no more matches are found or if a single search
     exceeds LinkedIn's 1000 non-commercial use limit.
-    
+
     """
 
     # We will look for 25 names on each loop. So, we set a maximum amount of
@@ -459,6 +459,26 @@ def set_inner_loops(staff_count, args):
         args.depth = loops
 
     return args.depth, args.geoblast
+
+
+def set_outer_loops(args):
+    """
+    Set the number of loops to perform during the scraping sessions
+    :param args:
+    :return:
+    """
+    # If we are using geoblast or keywords, we need to define a number of
+    # "outer_loops". an outer loops will be a normal LinkedIn search, maing
+    # out at 1000 results.
+
+    if args.geoblast:
+        outer_loops = range(0, len(GEO_REGIONS))
+    elif args.keywords:
+        outer_loops = range(0, len(args.keywords))
+    else:
+        outer_loops = range(0, 1)
+
+    return outer_loops
 
 
 def main():
