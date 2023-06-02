@@ -348,7 +348,12 @@ def set_csrf_token(session):
     return session
 
 
-def get_company_info(name, session):
+def get_company_info(name, session) -> (str, int):
+    """
+    :param name:
+    :param session:
+    :return (str, int):
+    """
     """Scrapes basic company info.
 
     Note that not all companies fill in this info, so exceptions are provided.
@@ -406,14 +411,14 @@ def get_company_info(name, session):
     print("          -Name: " + found_name)
     print("          -ID: " + found_id)
     print("          -Desc: " + found_desc)
-    print("          -Staff: " + found_staff)
+    print("          -Staff: " + str(found_staff))
     print("          -URL: " + found_website)
     print(f"\n[*] Hopefully that's the right {name}! If not, check LinkedIn and try again.\n")
 
     return found_id, found_staff
 
 
-def set_inner_loops(staff_count, args):
+def set_inner_loops(staff_count: int, args):
     """Defines total hits to the search API.
 
     Sets a maximum amount of loops based no either the number of staff
@@ -429,7 +434,7 @@ def set_inner_loops(staff_count, args):
     # We will look for 25 names on each loop. So, we set a maximum amount of
     # loops to the amount of staff ? 25 + 1 more to catch remainders.
     loops = int((staff_count / 25) + 1)
-    print(f"[*] Company has {staff_count} profiles to check.Some may be anonymous.")
+    print(f"[*] Company has {staff_count} profiles to check. Some may be anonymous.")
 
     # The lines below attempts to detect large result set and compare that
     # with the command line arguments passed. The goal is to warn when you
@@ -468,7 +473,7 @@ def set_outer_loops(args):
     :return:
     """
     # If we are using geoblast or keywords, we need to define a number of
-    # "outer_loops". an outer loops will be a normal LinkedIn search, maing
+    # "outer_loops". an outer loops will be a normal LinkedIn search, maxing
     # out at 1000 results.
 
     if args.geoblast:
@@ -478,6 +483,7 @@ def set_outer_loops(args):
     else:
         outer_loops = range(0, 1)
 
+    print(outer_loops)
     return outer_loops
 
 
@@ -507,6 +513,8 @@ def main():
     args.depth, args.geoblast = set_inner_loops(staff_count, args)
     outer_loops = set_outer_loops(args)
 
+    # Do the actual searching
+    print()
 
 if __name__ == "__main__":
     main()
