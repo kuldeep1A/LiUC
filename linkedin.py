@@ -30,7 +30,7 @@ GEO_REGIONS = {
     'r12': 'af:0|bh:0|il:0|jo:0|kw:0|pk:0|qa:0|sa:0|ae:0'}
 
 
-class NameMutator():
+class NameMutator:
 
     def __init__(self, name):
         self.name = self.clean_name(name)
@@ -56,8 +56,8 @@ class NameMutator():
         name = re.sub("[òóôõö]", 'o', name)
         name = re.sub("[ùúûü]", 'u', name)
         name = re.sub("[ýÿ]", 'y', name)
-        name = re.sub("[ß]", 'ss', name)
-        name = re.sub("[ñ]", 'n', name)
+        name = re.sub("ß", 'ss', name)
+        name = re.sub("ñ", 'n', name)
 
         # Get rid of all things in parentheses. Lots of people put various credentials, etc
         name = re.sub(r'\([^()]*\)', '', name)
@@ -87,7 +87,7 @@ class NameMutator():
         Some people have funny names. We assume the most important name are:
         first name, last name, and the name of right before the last name (if they have one)
         """
-        parsed = re.split(' |-', name)
+        parsed = re.split('[ |-]', name)
 
         if len(parsed) > 2:
             split_name = {'first': parsed[0], 'second': parsed[-2], 'last': parsed[-1]}
@@ -170,7 +170,7 @@ def parse_arguments():
                         help='A valid LinkedIn username.')
     parser.add_argument('-c', '--company', type=str, action='store',
                         required=False,
-                        default='dbvertex',
+                        default='shurutech',
                         help='Company name exactly as typed in the company '
                              'linkedin profile page URL.')
     parser.add_argument('-p', '--password', type=str, action='store',
@@ -536,15 +536,14 @@ def find_employees(result):
     # When you get to the last page of results, the next page will have an empty
     # "elements" list.
     if not result_json['elements']:
+        print("not result_json['elements'")
         return False
 
     # The "elements" list is the mini-profile you see when scrolling through a
     # company's employees. It does not have all info on the person, like their
     # entire job history. It only has some basics.
     for body in result_json['elements']:
-        profile = (body['hitInfo']
-        ['com.linkedin.voyager.search.SearchProfile']
-        ['miniProfile'])
+        profile = (body['hitInfo']['com.linkedin.voyager.search.SearchProfile']['miniProfile'])
         full_name = f"{profile['firstName']} {profile['lastName']}"
         employee = {'full_name': full_name,
                     'occupation': profile['occupation']}
@@ -560,6 +559,16 @@ def do_loops(session, company_id, outer_loops, args):
     """
     Performs looping where the actual HTTP requests to scrape names occurs
 
+    This is broken into an individual function both to reduce complexity but also to
+    allow a Ctrl-C to happen and to still write the data we've scraped so far.
+
+    The mobile site used returns proper JSON, which is parsed in this function.
+
+    Has the concept of inner an outer loops. Outer-loops come into play when
+    using --keywords or --geoblast, both which attempt to bypass the 1,000
+    record search limit.
+
+    This function will stop searching if a loop returns 0 new names.
     :param session:
     :param company_id:
     :param outer_loops:
@@ -578,7 +587,7 @@ def do_loops(session, company_id, outer_loops, args):
                 region_name = 'r' + str(current_loop)
                 current_region = GEO_REGIONS[region_name]
                 current_keyword = ''
-                print(f"\n[*] Looping through region {current_region} ")
+                print(f"\n[*] Looping through region {current_region}")
             elif args.keywords:
                 current_keyword = args.keywords[current_loop]
                 current_region = ''
@@ -593,7 +602,7 @@ def do_loops(session, company_id, outer_loops, args):
 
                 sys.stdout.flush()
                 # Standard output
-                sys.stdout.write(f"[*] Scraping results on loop {str(page + 1)}...      ")
+                sys.stdout.write(f"[*] Scraping results on loop {str(page + 1)}...    ")
                 result = get_results(session, company_id, page, current_region, current_keyword)
 
                 if result.status_code != 200:
@@ -601,13 +610,13 @@ def do_loops(session, company_id, outer_loops, args):
                     print("Bailing from loops, but you should troubleshoot.")
                     break
 
-                # Commercial Search Limit might be triggerd
+                # Commercial Search Limit might be triggered
                 if "UPSELL_LIMIT" in result.text:
                     sys.stdout.write('\n')
-                    print("[!] You've hit the Commercial search limit! "
+                    print("[!] You've hit the commercial search limit! "
                           "Try again on the 1st of the month. Sorry. :(")
                     break
-                print(result.text)
+
                 found_employees = find_employees(result.text)
 
                 if not found_employees:
@@ -618,7 +627,7 @@ def do_loops(session, company_id, outer_loops, args):
                 new_names += len(found_employees)
                 employee_list.extend(found_employees)
 
-                sys.stdout.write(f"     [*] Added {str(new_names)} new names. "
+                sys.stdout.write(f"    [*] Added {str(new_names)} new names. "
                                  f"Running total: {str(len(employee_list))}"
                                  "              \r")
 
@@ -691,23 +700,6 @@ def write_files(company, domain, employees, out_dir):
 
     with open(f'{out_dir}/{company}-last_f.txt', 'w', encoding='utf-8') as outfile:
         write_lines(employees, 'last_f', domain, outfile)
-        with open(f'{out_dir}/{company}-flast.txt', 'w', encoding='utf-8') as outfile:
-            write_lines(employees, 'f_last', domain, outfile)
-
-    with open(f'{out_dir}/{company}-f.last.txt', 'w', encoding='utf-8') as outfile:
-        write_lines(employees, 'f_dot_last', domain, outfile)
-
-    with open(f'{out_dir}/{company}-first_l.txt', 'w', encoding='utf-8') as outfile:
-        write_lines(employees, 'first_l', domain, outfile)
-
-    with open(f'{out_dir}/{company}-first.last.txt', 'w', encoding='utf-8') as outfile:
-        write_lines(employees, 'first_dot_last', domain, outfile)
-
-    with open(f'{out_dir}/{company}-first.txt', 'w', encoding='utf-8') as outfile:
-        write_lines(employees, 'first', domain, outfile)
-
-    with open(f'{out_dir}/{company}-last_f.txt', 'w', encoding='utf-8') as outfile:
-        write_lines(employees, 'last_f', domain, outfile)
 
 
 def main():
@@ -728,8 +720,7 @@ def main():
 
     # Get basic company info
     print("[*] Trying to get company info...")
-    if session is not bool:
-        company_id, staff_count = get_company_info(args.company, session)
+    company_id, staff_count = get_company_info(args.company, session)
 
     # Define inner and outer loops
     print("[*] Calculating inner and outer loops...")
