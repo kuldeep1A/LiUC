@@ -9,6 +9,8 @@ import urllib.parse
 import requests
 import urllib3
 
+
+
 # The dictionary below is a best-effort attempt to spread a search load
 # across sets of geographic locations. This can bypass the 1000 result
 # search limit as we are now allowed 1000 per geo set.
@@ -154,10 +156,13 @@ class NameMutator:
         return names
 
 
-def parse_arguments():
+def parse_arguments(email, company):
     """
     Handle user-supplied arguments
     """
+    if not company:
+        company = 'wilson-security'
+
     desc = ('OSINT tool to generate lists of probable usernames from a'
             ' given company\'s LinkedIn page. This tool may break when'
             ' LinkedIn changes their site.')
@@ -166,11 +171,11 @@ def parse_arguments():
 
     parser.add_argument('-u', '--username', type=str, action='store',
                         required=False,
-                        default='happywalamode@gmail.com',
+                        default=f'{email}',
                         help='A valid LinkedIn username.')
     parser.add_argument('-c', '--company', type=str, action='store',
                         required=False,
-                        default='shurutech',
+                        default=f'{company}',
                         help='Company name exactly as typed in the company '
                              'linkedin profile page URL.')
     parser.add_argument('-p', '--password', type=str, action='store',
@@ -367,7 +372,6 @@ def get_company_info(name, session) -> (str, int):
     response = session.get(('https://www.linkedin.com'
                             '/voyager/api/organization/companies?'
                             'q=universalName&universalName=' + escaped_name))
-    print(response.status_code)
     if response.status_code == 404:
         print(f"[!] Could not find that '{escaped_name}' company name. Please double-check LinkedIn and try again.")
         sys.exit()
@@ -536,7 +540,6 @@ def find_employees(result):
     # When you get to the last page of results, the next page will have an empty
     # "elements" list.
     if not result_json['elements']:
-        print("not result_json['elements'")
         return False
 
     # The "elements" list is the mini-profile you see when scrolling through a
@@ -547,6 +550,7 @@ def find_employees(result):
         full_name = f"{profile['firstName']} {profile['lastName']}"
         employee = {'full_name': full_name,
                     'occupation': profile['occupation']}
+        print(employee)
 
         # Some employee names are not disclosed and return empty. We don't want those.
         if len(employee['full_name']) > 1:
@@ -706,7 +710,9 @@ def main():
     """Main Function"""
     print("-" * 50)
     print("Let's access the username of a company")
-    args = parse_arguments()
+    YourEmail = input("Enter your LinkedIn ID: ")
+    CompanyName = input("default is 'wilson-security'\nEnter Company LinkedIn URL Name: ")
+    args = parse_arguments(YourEmail, CompanyName)
 
     # Instantiate a session by login in to LinkedIn
     session = login(args)
