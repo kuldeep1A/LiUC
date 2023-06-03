@@ -10,7 +10,6 @@ import requests
 import urllib3
 
 
-
 # The dictionary below is a best-effort attempt to spread a search load
 # across sets of geographic locations. This can bypass the 1000 result
 # search limit as we are now allowed 1000 per geo set.
