@@ -166,7 +166,7 @@ def parse_arguments():
 
     parser.add_argument('-u', '--username', type=str, action='store',
                         required=False,
-                        default='kuldeepdhangarkd@gmail.com',
+                        default='happywalamode@gmail.com',
                         help='A valid LinkedIn username.')
     parser.add_argument('-c', '--company', type=str, action='store',
                         required=False,
@@ -607,7 +607,7 @@ def do_loops(session, company_id, outer_loops, args):
                     print("[!] You've hit the Commercial search limit! "
                           "Try again on the 1st of the month. Sorry. :(")
                     break
-
+                print(result.text)
                 found_employees = find_employees(result.text)
 
                 if not found_employees:
@@ -629,6 +629,25 @@ def do_loops(session, company_id, outer_loops, args):
         print("\n\n[!] Caught Ctrl-C. Breaking loops and writing files")
 
     return employee_list
+
+
+def write_lines(employees, name_func, domain, outfile):
+    """
+    Helper function to mutate names and write to an outfile
+
+
+    Needs to be called with a string variable in name_func that matches the class method
+    name in the NameMutator class
+    :param employees:
+    :param name_func:
+    :param domain:
+    :param outfile:
+    :return:
+    """
+    for employee in employees:
+        mutator = NameMutator(employee["full_name"])
+        for name in getattr(mutator, name_func)():
+            outfile.write(name + domain + '\n')
 
 
 def write_files(company, domain, employees, out_dir):
@@ -654,6 +673,41 @@ def write_files(company, domain, employees, out_dir):
         outfile.write('full_name,occupation\n')
         for employee in employees:
             outfile.write(employee['full_name'] + '.' + employee['occupation'] + '\n')
+
+    with open(f'{out_dir}/{company}-flast.txt', 'w', encoding='utf-8') as outfile:
+        write_lines(employees, 'f_last', domain, outfile)
+
+    with open(f'{out_dir}/{company}-f.last.txt', 'w', encoding='utf-8') as outfile:
+        write_lines(employees, 'f_dot_last', domain, outfile)
+
+    with open(f'{out_dir}/{company}-first_l.txt', 'w', encoding='utf-8') as outfile:
+        write_lines(employees, 'first_l', domain, outfile)
+
+    with open(f'{out_dir}/{company}-first.last.txt', 'w', encoding='utf-8') as outfile:
+        write_lines(employees, 'first_dot_last', domain, outfile)
+
+    with open(f'{out_dir}/{company}-first.txt', 'w', encoding='utf-8') as outfile:
+        write_lines(employees, 'first', domain, outfile)
+
+    with open(f'{out_dir}/{company}-last_f.txt', 'w', encoding='utf-8') as outfile:
+        write_lines(employees, 'last_f', domain, outfile)
+        with open(f'{out_dir}/{company}-flast.txt', 'w', encoding='utf-8') as outfile:
+            write_lines(employees, 'f_last', domain, outfile)
+
+    with open(f'{out_dir}/{company}-f.last.txt', 'w', encoding='utf-8') as outfile:
+        write_lines(employees, 'f_dot_last', domain, outfile)
+
+    with open(f'{out_dir}/{company}-first_l.txt', 'w', encoding='utf-8') as outfile:
+        write_lines(employees, 'first_l', domain, outfile)
+
+    with open(f'{out_dir}/{company}-first.last.txt', 'w', encoding='utf-8') as outfile:
+        write_lines(employees, 'first_dot_last', domain, outfile)
+
+    with open(f'{out_dir}/{company}-first.txt', 'w', encoding='utf-8') as outfile:
+        write_lines(employees, 'first', domain, outfile)
+
+    with open(f'{out_dir}/{company}-last_f.txt', 'w', encoding='utf-8') as outfile:
+        write_lines(employees, 'last_f', domain, outfile)
 
 
 def main():
