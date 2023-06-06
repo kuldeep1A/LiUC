@@ -88,7 +88,7 @@ class NameMutator:
         Some people have funny names. We assume the most important name are:
         first name, last name, and the name of right before the last name (if they have one)
         """
-        parsed = re.split('[ |-]', name)
+        parsed = re.split('[|-]', name)
 
         if len(parsed) > 2:
             split_name = {'first': parsed[0], 'second': parsed[-2], 'last': parsed[-1]}
@@ -178,7 +178,7 @@ def parse_arguments(email, company):
                         help='Company name exactly as typed in the company '
                              'linkedin profile page URL.')
     parser.add_argument('-p', '--password', type=str, action='store',
-                        help='Specify your password in clear-text on the '
+                        help='Specify your password in clear-Test on the '
                              'command line. If not specified, will prompt and '
                              'obfuscate as you type.')
     parser.add_argument('-n', '--domain', type=str, action='store',
@@ -494,13 +494,19 @@ def get_results(session, company_id, page, region, keyword):
     """
     Scrapes raw data for processing.
 
-    :param session:
-    :param company_id:
-    :param page:
-    :param region:
-    :param keyword:
-    :return:
+    The URL below is what the LinkedIn mobile HTTP site queries when manually
+    scrolling through search results.
+
+    The mobile site defaults to using a 'count' of 10, but testing shows that
+    25 is allowed. This behavior will appear to the web server as someone
+    scrolling quickly through all available results.
     """
+    # When using the --geoblast feature, we need to inject our set of region
+    # codes into the search parameter.
+    if region:
+        region = re.sub(':', '%3A', region)  # must URL encode this parameter
+
+    # Build the base search URL.
     url = ('https://www.linkedin.com'
            '/voyager/api/search/hits'
            f'?facetCurrentCompany=List({company_id})'
@@ -514,15 +520,14 @@ def get_results(session, company_id, page, region, keyword):
 
     # Perform the search for this iteration.
     result = session.get(url)
-
     return result
 
 
 def find_employees(result):
     """
-    Takes the text response of an HTTP query, converts to JSON, and extracts employee details.
+    Takes the Test response of an HTTP query, converts to JSON, and extracts employee details.
 
-    Returns a list fo dictionary items, or False if none found.
+    Returns a list of dictionary items, or False if none found.
     :param result:
     :return:
     """
@@ -549,7 +554,6 @@ def find_employees(result):
         full_name = f"{profile['firstName']} {profile['lastName']}"
         employee = {'full_name': full_name,
                     'occupation': profile['occupation']}
-        print(employee)
 
         # Some employee names are not disclosed and return empty. We don't want those.
         if len(employee['full_name']) > 1:
@@ -572,11 +576,6 @@ def do_loops(session, company_id, outer_loops, args):
     record search limit.
 
     This function will stop searching if a loop returns 0 new names.
-    :param session:
-    :param company_id:
-    :param outer_loops:
-    :param args:
-    :return:
     """
     # Crafting the right URL is a bit tricky, so currently unnecessary
     # parameters are still being included but set to empty. You will see this
@@ -738,6 +737,9 @@ def main():
 
     # Write the data to some files.
     write_files(args.company, args.domain, employees, args.output)
+
+    # Time to get hacking.
+    print(f"\n\n[*] All done! Check out your lovely new files in {args.output}")
 
 
 if __name__ == "__main__":
