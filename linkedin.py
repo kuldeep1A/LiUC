@@ -88,7 +88,7 @@ class NameMutator:
         Some people have funny names. We assume the most important name are:
         first name, last name, and the name of right before the last name (if they have one)
         """
-        parsed = re.split('|-', name)
+        parsed = re.split(' |-', name)
 
         if len(parsed) > 2:
             split_name = {'first': parsed[0], 'second': parsed[-2], 'last': parsed[-1]}
