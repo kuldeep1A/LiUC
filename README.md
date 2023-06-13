@@ -11,5 +11,5 @@ explicitly prohibits scraping their website in their terms of service,
 and bypassing their security measures could lead to legal consequences.
 "Check solution for this API to YouTube or Raise ISSUE"
 
-Add some function to uses in future <br>
+In future Add some (code) function to uses in future <br>
 Thank to read...
